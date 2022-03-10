@@ -1,0 +1,49 @@
+<component name="InspectionProjectProfileManager">
+  <profile version="1.0">
+    <option name="myName" value="Project Default" />
+    <inspection_tool class="DjangoUnresolvedTemplateReferenceInspection" enabled="false" level="WARNING" enabled_by_default="false" />
+    <inspection_tool class="HtmlUnknownAttribute" enabled="true" level="WARNING" enabled_by_default="true">
+      <option name="myValues">
+        <value>
+          <list size="2">
+            <item index="0" class="java.lang.String" itemvalue="заявку”" />
+            <item index="1" class="java.lang.String" itemvalue="line-height:5;" />
+          </list>
+        </value>
+      </option>
+      <option name="myCustomValuesEnabled" value="true" />
+    </inspection_tool>
+    <inspection_tool class="PyPep8Inspection" enabled="true" level="WEAK WARNING" enabled_by_default="true">
+      <option name="ignoredErrors">
+        <list>
+          <option value="E225" />
+          <option value="E501" />
+        </list>
+      </option>
+    </inspection_tool>
+    <inspection_tool class="PyUnresolvedReferencesInspection" enabled="true" level="WARNING" enabled_by_default="true">
+      <option name="ignoredIdentifiers">
+        <list>
+          <option value="str.is_valid" />
+          <option value="list.keys" />
+          <option value="question.models.TYPE_CHOISES" />
+          <option value="api.views.key" />
+          <option value="list.decode" />
+          <option value="str.decode" />
+          <option value="urok1.poll.models.Poll.objects" />
+          <option value="poll.models.Poll.objects" />
+          <option value="datetime.datetime.datetime" />
+          <option value="datetime.date.now" />
+          <option value="tuple.add" />
+          <option value="pictures.serializers.FigureSerializer.url" />
+          <option value="requests.method" />
+          <option value="pictures.models.Figure.open" />
+          <option value="urllib.request.width" />
+          <option value="pictures.models.Figure.__getitem__" />
+          <option value="django.core.servers.basehttp.FileWrapper" />
+          <option value="django.db.models.PointField" />
+        </list>
+      </option>
+    </inspection_tool>
+  </profile>
+</component>
