@@ -44,18 +44,44 @@ class Amount(models.Model):
     """
     модель суммы перевода
     """
-    amount_from_account = models.ForeignKey(BankAccount, related_name='amount_from_account', on_delete=models.PROTECT)
+    amount_from_account = models.ForeignKey(BankAccount, related_name='list_amount_from', on_delete=models.PROTECT)
     """счет списания средств(:class:`Bank_Account`) к которому относится данная сумма перевода """
-    amount_to_account = models.ForeignKey(BankAccount, on_delete=models.PROTECT)
+    amount_to_account = models.ForeignKey(BankAccount, related_name='list_amount_to', on_delete=models.PROTECT)
     """счет зачисления средств(:class:`Bank_Account`) к которому относится данная сумма перевода """
     quantum = models.DecimalField(max_digits=16, decimal_places=2)
     """сумма переводимых средств"""
     datetime = models.DateTimeField(auto_created=True)
     """дата и время транзакции"""
-
+    transaction = models.ForeignKey('Transaction',related_name='list_amount', on_delete=models.PROTECT)
+    """дата и время транзакции"""
     def __str__(self):
         """
         строковое представление обьекта суммы перевода
-        :return: сумма переведенных средств
+        :return: сумма средств переведенных с данного счета
         """
         return self.quantum
+
+
+class Transaction(models.Model):
+    """
+    модель транзакции, включающей в себя несколько сумм переводимых с нескольких счетов на один счет получателя
+    """
+
+    name_from = models.ForeignKey(Utilzer, related_name='list_transaction_from', on_delete=models.PROTECT)
+    """имя пользователя который перечисляет средства"""
+    name_to = models.ForeignKey(Utilzer, related_name='list_transaction_to', on_delete=models.PROTECT)
+    """имя пользователя которому перечисляют средства"""
+    total_quantum = models.DecimalField(max_digits=16, decimal_places=2)
+    """общая сумма переводимых средств"""
+    datetime = models.DateTimeField(auto_created=True)
+    """дата и время создания обьекта транзакции"""
+
+    class Meta:
+        unique_together = ('name_from', 'name_to', 'total_quantum', 'datetime')
+
+    def __str__(self):
+        """
+        строковое предствление обьекта транзакции
+        :return: общая сумма средств переведенного между пользователями в данный момент времени
+        """
+        return self.total_quantum

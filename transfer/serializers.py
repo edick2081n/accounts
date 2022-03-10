@@ -1,7 +1,8 @@
 from rest_framework import serializers
 from rest_framework.authtoken.models import Token
 from django.contrib.auth.hashers import make_password
-from .models import Utilzer, BankAccount, Amount
+from .models import Utilzer, BankAccount, Amount, Transaction
+from rest_framework.response import Response
 
 
 class TokenSerializer(serializers.ModelSerializer):
@@ -72,12 +73,33 @@ class AmountSerializer(serializers.ModelSerializer):
 
 class TransactionSerializer(serializers.Serializer):
 
-    amount_from_accounts = serializers.ListField(child=serializers.CharField())
-    amount_to_account = serializers.CharField()
-    amount = serializers.DecimalField(max_digits=16, decimal_places=2)
+    amount_from = serializers.ListField(child=serializers.CharField())
+    amount_to = serializers.CharField()
+    amount_for_transmitting = serializers.DecimalField(max_digits=16, decimal_places=2)
 
     def save(self):
-        accounts_from = self.validated_data['amount_from_accounts']
+        amount_from = self.validated_data['amount_from']
+        amount_to = self.validated_data['amount_to']
+        amount_for_transmitting = self.validated_data['amount_for_transmitting']
 
+        for account in amount_from:
+            a = BankAccount.objects.filter(name=account)
+            b = a.balance
+            c = b - amount_for_transmitting
+            amount_for_transmitting_from_account = amount_for_transmitting/len(amount_from)
 
+            object_amount = Amount.objects.create(amount_from_account=account,
+                                                  amount_to_account=amount_to,
+                                                  quantum=amount_for_transmitting_from_account)
+            object_bankaccount = BankAccount.objects.create(name=account,
+                                                            balance=c)
+
+            return Response(object_amount.quantum)
+        object_transaction = Transaction.objects.create(total_quantum= amount_for_transmitting)
+
+        return Response(object_transaction.total_quantum)
+
+       # object_bankaccount = BankAccount.objects.create(name=  ,
+    #                                                    balance=  ,
+    #                                                                  )
 

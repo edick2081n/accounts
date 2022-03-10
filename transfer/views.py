@@ -2,9 +2,9 @@
 from rest_framework import viewsets
 from rest_framework.decorators import action
 from rest_framework.response import Response
-from .models import Utilzer, BankAccount, Amount
+from .models import Utilzer, BankAccount, Amount, Transaction
 from .serializers import UtilzerSerializer, BankAccountSerializer, AmountSerializer, DetailUtilzerSerializer, \
-    TokenSerializer, LoginSerializer
+    TokenSerializer, LoginSerializer, TransactionSerializer
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.authtoken.models import Token
 
@@ -46,20 +46,21 @@ class BankAccountViewSet(viewsets.ReadOnlyModelViewSet):
 
 
 
-class DetailUtilzerViewSet(viewsets.ReadOnlyModelViewSet):
-    queryset = BankAccount.objects.all()
+class TransactionViewSet(viewsets.ReadOnlyModelViewSet):
+    queryset = Transaction.objects.all()
+    serializer_class = TransactionSerializer
 
-    serializer_class = DetailUtilzerSerializer
+    @action(methods=['POST'], detail=True)
+    def transmiting(self, request):
+        serializer = TransactionSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data)
+        return Response(serializer.errors)
 
-    @action(methods=['GET'], detail=True)
-    def transmiting(self, request, *args, **kwargs):
-        serializer = AmountSerializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        amount_from_account = serializer.validated_data['amount_from_account']
-        amount_to_account = serializer.validated_data['amount_to_account']
-        quantum = serializer.validated_data['quantum']
-        object_amount = Amount.objects.create(amount_from_account=amount_from_account, amount_to_account=amount_to_account, quantum=quantum)
 
-        return Response(object_amount.id)
+
+
+
 
 
