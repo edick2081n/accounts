@@ -71,35 +71,49 @@ class AmountSerializer(serializers.ModelSerializer):
         model = Amount
         fields = "__all__"
 
-class TransactionSerializer(serializers.Serializer):
+class TransmittingSerializer(serializers.Serializer):
 
-    amount_from = serializers.ListField(child=serializers.CharField())
-    amount_to = serializers.CharField()
+    account_from = serializers.ListField(child=serializers.CharField())
+    account_to = serializers.CharField()
     amount_for_transmitting = serializers.DecimalField(max_digits=16, decimal_places=2)
 
     def save(self):
-        amount_from = self.validated_data['amount_from']
-        amount_to = self.validated_data['amount_to']
+        account_from = self.validated_data['account_from']
+        account_to = self.validated_data['account_to']
         amount_for_transmitting = self.validated_data['amount_for_transmitting']
+        utilzer_from = BankAccount.objects.get(name=account_from[0]).account_of_utilzer
+        object_bankaccount_to = BankAccount.objects.get(name=account_to)
+        utilzer_to =object_bankaccount_to.account_of_utilzer
 
-        for account in amount_from:
-            a = BankAccount.objects.filter(name=account)
-            b = a.balance
-            c = b - amount_for_transmitting
-            amount_for_transmitting_from_account = amount_for_transmitting/len(amount_from)
+        object_transaction = Transaction.objects.create(total_quantum=amount_for_transmitting,
+                                                         name_from=utilzer_from,
+                                                         name_to=utilzer_to)
 
-            object_amount = Amount.objects.create(amount_from_account=account,
-                                                  amount_to_account=amount_to,
-                                                  quantum=amount_for_transmitting_from_account)
-            object_bankaccount = BankAccount.objects.create(name=account,
-                                                            balance=c)
 
-            return Response(object_amount.quantum)
-        object_transaction = Transaction.objects.create(total_quantum= amount_for_transmitting)
+        for account in account_from:
+            object_bankaccount_from = BankAccount.objects.get(name=account)
+            object_bankaccount_from_balance = object_bankaccount_from.balance
 
-        return Response(object_transaction.total_quantum)
+            amount_for_transmitting_from_account = amount_for_transmitting/len(account_from)
+            new_balance_for_account_from = object_bankaccount_from_balance - amount_for_transmitting_from_account
+
+            object_amount = Amount.objects.create(amount_from_account=object_bankaccount_from,
+                                                  amount_to_account=object_bankaccount_to,
+                                                  quantum=amount_for_transmitting_from_account,
+                                                  transaction=object_transaction)
+            object_bankaccount_from.balance = new_balance_for_account_from
+            object_bankaccount_from.save()
+        object_bankaccount_to.balance+=amount_for_transmitting
+        object_bankaccount_to.save()
+        return object_transaction
 
        # object_bankaccount = BankAccount.objects.create(name=  ,
     #                                                    balance=  ,
     #                                                                  )
 
+class TransactionSerializer(serializers.ModelSerializer):
+    name_from = serializers.StringRelatedField()
+    name_to = serializers.StringRelatedField()
+    class Meta:
+        model = Transaction
+        fields = '__all__'

@@ -21,7 +21,7 @@ class BankAccount(models.Model):
     """
     модель счета
     """
-    name = models.CharField(max_length=100)
+    name = models.CharField(max_length=100, unique=True)
     """название(номер) счета"""
     balance = models.DecimalField(max_digits=16, decimal_places=2, null=True)
     """текущий остаток по счету"""
@@ -50,7 +50,7 @@ class Amount(models.Model):
     """счет зачисления средств(:class:`Bank_Account`) к которому относится данная сумма перевода """
     quantum = models.DecimalField(max_digits=16, decimal_places=2)
     """сумма переводимых средств"""
-    datetime = models.DateTimeField(auto_created=True)
+    datetime = models.DateTimeField(auto_now_add=True)
     """дата и время транзакции"""
     transaction = models.ForeignKey('Transaction',related_name='list_amount', on_delete=models.PROTECT)
     """дата и время транзакции"""
@@ -73,7 +73,7 @@ class Transaction(models.Model):
     """имя пользователя которому перечисляют средства"""
     total_quantum = models.DecimalField(max_digits=16, decimal_places=2)
     """общая сумма переводимых средств"""
-    datetime = models.DateTimeField(auto_created=True)
+    datetime = models.DateTimeField(auto_now_add=True)
     """дата и время создания обьекта транзакции"""
 
     class Meta:

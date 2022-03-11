@@ -4,7 +4,7 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 from .models import Utilzer, BankAccount, Amount, Transaction
 from .serializers import UtilzerSerializer, BankAccountSerializer, AmountSerializer, DetailUtilzerSerializer, \
-    TokenSerializer, LoginSerializer, TransactionSerializer
+    TokenSerializer, LoginSerializer, TransmittingSerializer, TransactionSerializer
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.authtoken.models import Token
 
@@ -50,12 +50,13 @@ class TransactionViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Transaction.objects.all()
     serializer_class = TransactionSerializer
 
-    @action(methods=['POST'], detail=True)
+    @action(methods=['POST'], detail=False)
     def transmiting(self, request):
-        serializer = TransactionSerializer(data=request.data)
+        serializer = TransmittingSerializer(data=request.data)
         if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data)
+            transaction=serializer.save()
+            data = TransactionSerializer(transaction).data
+            return Response(data)
         return Response(serializer.errors)
 
 
