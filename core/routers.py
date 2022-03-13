@@ -6,6 +6,8 @@ router.register('auth', views.LoginUtilzerViewSet)
 router.register('clients', views.UtilzerViewSet, basename='clients')
 router.register('transaction', views.TransactionViewSet,  basename='accounts')
 router.register('bankaccounts', views.BankAccountViewSet, basename='bankaccounts')
+router.register('list', views.ListTransactionViewSet, basename='list')
+router.register('amount', views.ListAmountViewSet, basename='list')
 
 
 

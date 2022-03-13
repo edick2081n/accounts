@@ -7,15 +7,21 @@ from .serializers import UtilzerSerializer, BankAccountSerializer, AmountSeriali
     TokenSerializer, LoginSerializer, TransmittingSerializer, TransactionSerializer
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.authtoken.models import Token
+from django_filters.rest_framework import DjangoFilterBackend
 
 
 class LoginUtilzerViewSet(viewsets.GenericViewSet):
+    """
+    эндпоинт авторизации пользователя
+    """
     queryset = Token.objects.all()
     permission_classes = [AllowAny]
     serializer_class = TokenSerializer
 
     @action(methods=['POST'], detail=False)
     def login(self, request):
+     #   """"обработчик запросов авторизации"""
+
        input_serializer = LoginSerializer(data=request.data)
        input_serializer.is_valid(raise_exception=True)
 
@@ -27,20 +33,25 @@ class LoginUtilzerViewSet(viewsets.GenericViewSet):
 
 
 class UtilzerViewSet(viewsets.ReadOnlyModelViewSet):
-    serializer_class = DetailUtilzerSerializer
 
+    serializer_class = DetailUtilzerSerializer
+    pagination_class = None
     def get_queryset(self):
 
         return Utilzer.objects.exclude(is_superuser=True)
 
 
 class BankAccountViewSet(viewsets.ReadOnlyModelViewSet):
+    """
+
+    """
+    queryset = BankAccount.objects.all()
+    pagination_class = None
     serializer_class = BankAccountSerializer
-   # queryset = BankAccount.objects.all()
-    def get_queryset(self):
-        return BankAccount.objects.exclude(account_of_utilzer=self.request.user)
+
+    #def get_queryset(self):
         #return BankAccount.objects.exclude(account_of_utilzer=self.request.user)
-        #return BankAccount.objects.filter(account_of_utilzer='admin')
+        #return BankAccount.objects.all()
 
 
 
@@ -49,7 +60,7 @@ class BankAccountViewSet(viewsets.ReadOnlyModelViewSet):
 class TransactionViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Transaction.objects.all()
     serializer_class = TransactionSerializer
-
+    pagination_class = None
     @action(methods=['POST'], detail=False)
     def transmiting(self, request):
         serializer = TransmittingSerializer(data=request.data)
@@ -60,6 +71,17 @@ class TransactionViewSet(viewsets.ReadOnlyModelViewSet):
         return Response(serializer.errors)
 
 
+class ListTransactionViewSet(viewsets.ReadOnlyModelViewSet):
+    queryset = Transaction.objects.all()
+    serializer_class = TransactionSerializer
+    filter_backends = [DjangoFilterBackend]
+    filterset_fields = ['total_quantum', 'name_to__name']
+
+class ListAmountViewSet(viewsets.ReadOnlyModelViewSet):
+    queryset = Amount.objects.all()
+    serializer_class = AmountSerializer
+    filter_backends = [DjangoFilterBackend]
+    filterset_fields = {'amount_from_account__name':['iexact'], 'quantum':['exact'], 'datetime':['gte', 'lte', 'exact', 'gt', 'lt']}
 
 
 

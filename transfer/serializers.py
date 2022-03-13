@@ -1,17 +1,20 @@
 from rest_framework import serializers
 from rest_framework.authtoken.models import Token
 from django.contrib.auth.hashers import make_password
+from rest_framework.fields import DateField
+
 from .models import Utilzer, BankAccount, Amount, Transaction
 from rest_framework.response import Response
-
+from django.db.models.fields import DateField
 
 class TokenSerializer(serializers.ModelSerializer):
+    """сериализатор токена авторизации польззователя"""
     class Meta:
         model = Token
         fields = ['key']
 
 class LoginSerializer(serializers.Serializer):
-
+    """сериализатор авторизационнх данных пользователя"""
     username = serializers.CharField(min_length=1, max_length =200)
     password = serializers.CharField(min_length=1, max_length=150)
 
@@ -48,9 +51,10 @@ class UtilzerSerializer(serializers.ModelSerializer):
 
 class BankAccountSerializer(serializers.ModelSerializer):
     account_of_utilzer = serializers.StringRelatedField()
+
     class Meta:
         model = BankAccount
-        exclude = ['balance']
+        exclude = ['balance', 'id']
 
 
 class DetailUtilzerSerializer(UtilzerSerializer):
@@ -66,6 +70,8 @@ class DetailUtilzerSerializer(UtilzerSerializer):
 
 
 class AmountSerializer(serializers.ModelSerializer):
+    amount_from_account_name = serializers.StringRelatedField(source='amount_from_account')
+
 
     class Meta:
         model = Amount
@@ -96,20 +102,21 @@ class TransmittingSerializer(serializers.Serializer):
 
             amount_for_transmitting_from_account = amount_for_transmitting/len(account_from)
             new_balance_for_account_from = object_bankaccount_from_balance - amount_for_transmitting_from_account
+            # try:
+            if new_balance_for_account_from>0:
+                object_amount = Amount.objects.create(amount_from_account=object_bankaccount_from,
+                                                      amount_to_account=object_bankaccount_to,
+                                                      quantum=amount_for_transmitting_from_account,
+                                                      transaction=object_transaction)
+                object_bankaccount_from.balance = new_balance_for_account_from
+                object_bankaccount_from.save()
+        # except:
+            #     raise serializers.ValidationError(' на одном из счетов отправителя не хватает средств')
 
-            object_amount = Amount.objects.create(amount_from_account=object_bankaccount_from,
-                                                  amount_to_account=object_bankaccount_to,
-                                                  quantum=amount_for_transmitting_from_account,
-                                                  transaction=object_transaction)
-            object_bankaccount_from.balance = new_balance_for_account_from
-            object_bankaccount_from.save()
         object_bankaccount_to.balance+=amount_for_transmitting
         object_bankaccount_to.save()
         return object_transaction
 
-       # object_bankaccount = BankAccount.objects.create(name=  ,
-    #                                                    balance=  ,
-    #                                                                  )
 
 class TransactionSerializer(serializers.ModelSerializer):
     name_from = serializers.StringRelatedField()
@@ -117,3 +124,10 @@ class TransactionSerializer(serializers.ModelSerializer):
     class Meta:
         model = Transaction
         fields = '__all__'
+
+
+
+#необходимо проверять что остаток по счету положителен
+#необходимо проверять что счет account_to  принадлежит иному пользователю
+#необходимо проверять что все счета из списка account_from принадлежат залогиненному пользователю
+# проверить что невозможно создать object_bankaccount_to не обновив object_bankaccount_from
