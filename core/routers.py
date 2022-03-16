@@ -8,6 +8,8 @@ router.register('transaction', views.TransactionViewSet,  basename='accounts')
 router.register('bankaccounts', views.BankAccountViewSet, basename='bankaccounts')
 router.register('list', views.ListTransactionViewSet, basename='list')
 router.register('amount', views.ListAmountViewSet, basename='list')
+router.register('detailbankaccount', views.DetailBankAccountViewSet, basename='detail')
+router.register('delete', views.DeleteTransactionViewSet, basename='del')
 
 
 

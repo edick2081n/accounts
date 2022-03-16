@@ -1,0 +1,242 @@
+
+<!DOCTYPE html>
+
+<html lang="ru">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>transfer.serializers &#8212; документация accounts 1.0</title>
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/alabaster.css" />
+    <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
+    <script src="../../_static/jquery.js"></script>
+    <script src="../../_static/underscore.js"></script>
+    <script src="../../_static/doctools.js"></script>
+    <script src="../../_static/translations.js"></script>
+    <link rel="index" title="Алфавитный указатель" href="../../genindex.html" />
+    <link rel="search" title="Поиск" href="../../search.html" />
+   
+  <link rel="stylesheet" href="../../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <h1>Исходный код transfer.serializers</h1><div class="highlight"><pre>
+<span></span><span class="kn">from</span> <span class="nn">rest_framework</span> <span class="kn">import</span> <span class="n">serializers</span>
+<span class="kn">from</span> <span class="nn">rest_framework.authtoken.models</span> <span class="kn">import</span> <span class="n">Token</span>
+<span class="kn">from</span> <span class="nn">django.contrib.auth.hashers</span> <span class="kn">import</span> <span class="n">make_password</span>
+<span class="kn">from</span> <span class="nn">rest_framework.fields</span> <span class="kn">import</span> <span class="n">DateField</span>
+
+<span class="kn">from</span> <span class="nn">.models</span> <span class="kn">import</span> <span class="n">Utilzer</span><span class="p">,</span> <span class="n">BankAccount</span><span class="p">,</span> <span class="n">Amount</span><span class="p">,</span> <span class="n">Transaction</span>
+<span class="kn">from</span> <span class="nn">rest_framework.response</span> <span class="kn">import</span> <span class="n">Response</span>
+<span class="kn">from</span> <span class="nn">django.db.models.fields</span> <span class="kn">import</span> <span class="n">DateField</span>
+
+<div class="viewcode-block" id="TokenSerializer"><a class="viewcode-back" href="../../modules/serializers.html#transfer.serializers.TokenSerializer">[документация]</a><span class="k">class</span> <span class="nc">TokenSerializer</span><span class="p">(</span><span class="n">serializers</span><span class="o">.</span><span class="n">ModelSerializer</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;сериализатор токена авторизации польззователя&quot;&quot;&quot;</span>
+<div class="viewcode-block" id="TokenSerializer.Meta"><a class="viewcode-back" href="../../modules/serializers.html#transfer.serializers.TokenSerializer.Meta">[документация]</a>    <span class="k">class</span> <span class="nc">Meta</span><span class="p">:</span>
+        <span class="n">model</span> <span class="o">=</span> <span class="n">Token</span>
+        <span class="n">fields</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;key&#39;</span><span class="p">]</span></div></div>
+
+<div class="viewcode-block" id="LoginSerializer"><a class="viewcode-back" href="../../modules/serializers.html#transfer.serializers.LoginSerializer">[документация]</a><span class="k">class</span> <span class="nc">LoginSerializer</span><span class="p">(</span><span class="n">serializers</span><span class="o">.</span><span class="n">Serializer</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;сериализатор авторизационнх данных пользователя&quot;&quot;&quot;</span>
+    <span class="n">username</span> <span class="o">=</span> <span class="n">serializers</span><span class="o">.</span><span class="n">CharField</span><span class="p">(</span><span class="n">min_length</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">max_length</span> <span class="o">=</span><span class="mi">200</span><span class="p">)</span>
+    <span class="n">password</span> <span class="o">=</span> <span class="n">serializers</span><span class="o">.</span><span class="n">CharField</span><span class="p">(</span><span class="n">min_length</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">max_length</span><span class="o">=</span><span class="mi">150</span><span class="p">)</span>
+
+<div class="viewcode-block" id="LoginSerializer.validate"><a class="viewcode-back" href="../../modules/serializers.html#transfer.serializers.LoginSerializer.validate">[документация]</a>    <span class="k">def</span> <span class="nf">validate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">raw_data</span><span class="p">):</span>    <span class="c1"># нужно реализовать сравнение паролей</span>
+
+        <span class="n">user_username</span> <span class="o">=</span> <span class="n">raw_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;username&#39;</span><span class="p">)</span>
+        <span class="n">user_password</span> <span class="o">=</span> <span class="n">raw_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;password&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">user_username</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">user_password</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">serializers</span><span class="o">.</span><span class="n">ValidationError</span><span class="p">(</span><span class="s1">&#39; both fields are requaired&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">check_registration</span><span class="p">(</span><span class="n">raw_data</span><span class="p">)</span>    <span class="c1">#  мы вызываем метод объекта сериализатора (который мы описываем ниже)</span>
+        <span class="k">return</span> <span class="n">raw_data</span></div>
+
+<div class="viewcode-block" id="LoginSerializer.check_registration"><a class="viewcode-back" href="../../modules/serializers.html#transfer.serializers.LoginSerializer.check_registration">[документация]</a>    <span class="k">def</span> <span class="nf">check_registration</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">validated_data</span><span class="p">):</span>
+        <span class="n">user_username</span> <span class="o">=</span> <span class="n">validated_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;username&#39;</span><span class="p">)</span>
+        <span class="n">user_password</span> <span class="o">=</span> <span class="n">make_password</span><span class="p">(</span><span class="n">validated_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;password&#39;</span><span class="p">))</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">user_instance</span> <span class="o">=</span> <span class="n">Utilzer</span><span class="o">.</span><span class="n">objects</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">username</span><span class="o">=</span><span class="n">user_username</span><span class="p">)</span>
+        <span class="k">except</span> <span class="n">Utilzer</span><span class="o">.</span><span class="n">DoesNotExist</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">serializers</span><span class="o">.</span><span class="n">ValidationError</span><span class="p">(</span><span class="s1">&#39; user in not found&#39;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">user_instance</span><span class="o">.</span><span class="n">password</span> <span class="o">==</span> <span class="n">user_password</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">serializers</span><span class="o">.</span><span class="n">ValidationError</span><span class="p">(</span><span class="s1">&#39;password in incorrect&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">instance</span> <span class="o">=</span> <span class="n">user_instance</span>  <span class="c1"># полю обьекта сериализатора (LoginSerializer) который мы в дальнейшем</span></div></div>
+                                       <span class="c1"># использу</span>
+
+<div class="viewcode-block" id="UtilzerSerializer"><a class="viewcode-back" href="../../modules/serializers.html#transfer.serializers.UtilzerSerializer">[документация]</a><span class="k">class</span> <span class="nc">UtilzerSerializer</span><span class="p">(</span><span class="n">serializers</span><span class="o">.</span><span class="n">ModelSerializer</span><span class="p">):</span>
+
+<div class="viewcode-block" id="UtilzerSerializer.Meta"><a class="viewcode-back" href="../../modules/serializers.html#transfer.serializers.UtilzerSerializer.Meta">[документация]</a>    <span class="k">class</span> <span class="nc">Meta</span><span class="p">:</span>
+        <span class="n">model</span> <span class="o">=</span> <span class="n">Utilzer</span>
+        <span class="n">fields</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;username&#39;</span><span class="p">,</span> <span class="s1">&#39;password&#39;</span><span class="p">]</span></div></div>
+
+
+
+
+<div class="viewcode-block" id="BankAccountSerializer"><a class="viewcode-back" href="../../modules/serializers.html#transfer.serializers.BankAccountSerializer">[документация]</a><span class="k">class</span> <span class="nc">BankAccountSerializer</span><span class="p">(</span><span class="n">serializers</span><span class="o">.</span><span class="n">ModelSerializer</span><span class="p">):</span>
+    <span class="n">account_of_utilzer</span> <span class="o">=</span> <span class="n">serializers</span><span class="o">.</span><span class="n">StringRelatedField</span><span class="p">()</span>
+
+<div class="viewcode-block" id="BankAccountSerializer.Meta"><a class="viewcode-back" href="../../modules/serializers.html#transfer.serializers.BankAccountSerializer.Meta">[документация]</a>    <span class="k">class</span> <span class="nc">Meta</span><span class="p">:</span>
+        <span class="n">model</span> <span class="o">=</span> <span class="n">BankAccount</span>
+        <span class="n">fields</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;account_of_utilzer&#39;</span><span class="p">,</span> <span class="s1">&#39;name&#39;</span><span class="p">]</span></div></div>
+
+
+<div class="viewcode-block" id="DetailUtilzerSerializer"><a class="viewcode-back" href="../../modules/serializers.html#transfer.serializers.DetailUtilzerSerializer">[документация]</a><span class="k">class</span> <span class="nc">DetailUtilzerSerializer</span><span class="p">(</span><span class="n">UtilzerSerializer</span><span class="p">):</span>
+    <span class="n">bankaccount_set</span> <span class="o">=</span> <span class="n">BankAccountSerializer</span><span class="p">(</span><span class="n">many</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">required</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+
+<div class="viewcode-block" id="DetailUtilzerSerializer.Meta"><a class="viewcode-back" href="../../modules/serializers.html#transfer.serializers.DetailUtilzerSerializer.Meta">[документация]</a>    <span class="k">class</span> <span class="nc">Meta</span><span class="p">(</span><span class="n">UtilzerSerializer</span><span class="o">.</span><span class="n">Meta</span><span class="p">):</span>
+
+        <span class="n">fields</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;username&#39;</span><span class="p">,</span> <span class="s1">&#39;bankaccount_set&#39;</span><span class="p">]</span></div></div>
+
+
+
+
+
+
+<div class="viewcode-block" id="AmountSerializer"><a class="viewcode-back" href="../../modules/serializers.html#transfer.serializers.AmountSerializer">[документация]</a><span class="k">class</span> <span class="nc">AmountSerializer</span><span class="p">(</span><span class="n">serializers</span><span class="o">.</span><span class="n">ModelSerializer</span><span class="p">):</span>
+    <span class="n">amount_from_account_name</span> <span class="o">=</span> <span class="n">serializers</span><span class="o">.</span><span class="n">StringRelatedField</span><span class="p">(</span><span class="n">source</span><span class="o">=</span><span class="s1">&#39;amount_from_account&#39;</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="AmountSerializer.Meta"><a class="viewcode-back" href="../../modules/serializers.html#transfer.serializers.AmountSerializer.Meta">[документация]</a>    <span class="k">class</span> <span class="nc">Meta</span><span class="p">:</span>
+        <span class="n">model</span> <span class="o">=</span> <span class="n">Amount</span>
+        <span class="n">fields</span> <span class="o">=</span> <span class="s2">&quot;__all__&quot;</span></div></div>
+
+<div class="viewcode-block" id="TransmittingSerializer"><a class="viewcode-back" href="../../modules/serializers.html#transfer.serializers.TransmittingSerializer">[документация]</a><span class="k">class</span> <span class="nc">TransmittingSerializer</span><span class="p">(</span><span class="n">serializers</span><span class="o">.</span><span class="n">Serializer</span><span class="p">):</span>
+
+    <span class="n">account_from</span> <span class="o">=</span> <span class="n">serializers</span><span class="o">.</span><span class="n">ListField</span><span class="p">(</span><span class="n">child</span><span class="o">=</span><span class="n">serializers</span><span class="o">.</span><span class="n">CharField</span><span class="p">())</span>
+    <span class="n">account_to</span> <span class="o">=</span> <span class="n">serializers</span><span class="o">.</span><span class="n">CharField</span><span class="p">()</span>
+    <span class="n">amount_for_transmitting</span> <span class="o">=</span> <span class="n">serializers</span><span class="o">.</span><span class="n">DecimalField</span><span class="p">(</span><span class="n">max_digits</span><span class="o">=</span><span class="mi">16</span><span class="p">,</span> <span class="n">decimal_places</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+
+<div class="viewcode-block" id="TransmittingSerializer.save"><a class="viewcode-back" href="../../modules/serializers.html#transfer.serializers.TransmittingSerializer.save">[документация]</a>    <span class="k">def</span> <span class="nf">save</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">account_from</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">validated_data</span><span class="p">[</span><span class="s1">&#39;account_from&#39;</span><span class="p">]</span>
+        <span class="n">account_to</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">validated_data</span><span class="p">[</span><span class="s1">&#39;account_to&#39;</span><span class="p">]</span>
+        <span class="n">amount_for_transmitting</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">validated_data</span><span class="p">[</span><span class="s1">&#39;amount_for_transmitting&#39;</span><span class="p">]</span>
+        <span class="n">utilzer_from</span> <span class="o">=</span> <span class="n">BankAccount</span><span class="o">.</span><span class="n">objects</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="n">account_from</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span><span class="o">.</span><span class="n">account_of_utilzer</span>
+        <span class="n">object_bankaccount_to</span> <span class="o">=</span> <span class="n">BankAccount</span><span class="o">.</span><span class="n">objects</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="n">account_to</span><span class="p">)</span>
+        <span class="n">utilzer_to</span> <span class="o">=</span><span class="n">object_bankaccount_to</span><span class="o">.</span><span class="n">account_of_utilzer</span>
+
+        <span class="n">object_transaction</span> <span class="o">=</span> <span class="n">Transaction</span><span class="o">.</span><span class="n">objects</span><span class="o">.</span><span class="n">create</span><span class="p">(</span><span class="n">total_quantum</span><span class="o">=</span><span class="n">amount_for_transmitting</span><span class="p">,</span>
+                                                         <span class="n">name_from</span><span class="o">=</span><span class="n">utilzer_from</span><span class="p">,</span>
+                                                         <span class="n">name_to</span><span class="o">=</span><span class="n">utilzer_to</span><span class="p">)</span>
+
+
+        <span class="k">for</span> <span class="n">account</span> <span class="ow">in</span> <span class="n">account_from</span><span class="p">:</span>
+            <span class="n">object_bankaccount_from</span> <span class="o">=</span> <span class="n">BankAccount</span><span class="o">.</span><span class="n">objects</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="n">account</span><span class="p">)</span>
+            <span class="n">object_bankaccount_from_balance</span> <span class="o">=</span> <span class="n">object_bankaccount_from</span><span class="o">.</span><span class="n">balance</span>
+
+            <span class="n">amount_for_transmitting_from_account</span> <span class="o">=</span> <span class="n">amount_for_transmitting</span><span class="o">/</span><span class="nb">len</span><span class="p">(</span><span class="n">account_from</span><span class="p">)</span>
+            <span class="n">new_balance_for_account_from</span> <span class="o">=</span> <span class="n">object_bankaccount_from_balance</span> <span class="o">-</span> <span class="n">amount_for_transmitting_from_account</span>
+            <span class="c1"># try:</span>
+            <span class="k">if</span> <span class="n">new_balance_for_account_from</span><span class="o">&gt;</span><span class="mi">0</span><span class="p">:</span>
+                <span class="n">object_amount</span> <span class="o">=</span> <span class="n">Amount</span><span class="o">.</span><span class="n">objects</span><span class="o">.</span><span class="n">create</span><span class="p">(</span><span class="n">amount_from_account</span><span class="o">=</span><span class="n">object_bankaccount_from</span><span class="p">,</span>
+                                                      <span class="n">amount_to_account</span><span class="o">=</span><span class="n">object_bankaccount_to</span><span class="p">,</span>
+                                                      <span class="n">quantum</span><span class="o">=</span><span class="n">amount_for_transmitting_from_account</span><span class="p">,</span>
+                                                      <span class="n">transaction</span><span class="o">=</span><span class="n">object_transaction</span><span class="p">)</span>
+                <span class="n">object_bankaccount_from</span><span class="o">.</span><span class="n">balance</span> <span class="o">=</span> <span class="n">new_balance_for_account_from</span>
+                <span class="n">object_bankaccount_from</span><span class="o">.</span><span class="n">save</span><span class="p">()</span>
+        <span class="c1"># except:</span>
+            <span class="c1">#     raise serializers.ValidationError(&#39; на одном из счетов отправителя не хватает средств&#39;)</span>
+
+        <span class="n">object_bankaccount_to</span><span class="o">.</span><span class="n">balance</span><span class="o">+=</span><span class="n">amount_for_transmitting</span>
+        <span class="n">object_bankaccount_to</span><span class="o">.</span><span class="n">save</span><span class="p">()</span>
+        <span class="k">return</span> <span class="n">object_transaction</span></div></div>
+
+
+<div class="viewcode-block" id="TransactionSerializer"><a class="viewcode-back" href="../../modules/serializers.html#transfer.serializers.TransactionSerializer">[документация]</a><span class="k">class</span> <span class="nc">TransactionSerializer</span><span class="p">(</span><span class="n">serializers</span><span class="o">.</span><span class="n">ModelSerializer</span><span class="p">):</span>
+    <span class="n">name_from</span> <span class="o">=</span> <span class="n">serializers</span><span class="o">.</span><span class="n">StringRelatedField</span><span class="p">()</span>
+    <span class="n">name_to</span> <span class="o">=</span> <span class="n">serializers</span><span class="o">.</span><span class="n">StringRelatedField</span><span class="p">()</span>
+<div class="viewcode-block" id="TransactionSerializer.Meta"><a class="viewcode-back" href="../../modules/serializers.html#transfer.serializers.TransactionSerializer.Meta">[документация]</a>    <span class="k">class</span> <span class="nc">Meta</span><span class="p">:</span>
+        <span class="n">model</span> <span class="o">=</span> <span class="n">Transaction</span>
+        <span class="n">fields</span> <span class="o">=</span> <span class="s1">&#39;__all__&#39;</span></div></div>
+
+
+
+<div class="viewcode-block" id="DetailBankAccountSerializer"><a class="viewcode-back" href="../../modules/serializers.html#transfer.serializers.DetailBankAccountSerializer">[документация]</a><span class="k">class</span> <span class="nc">DetailBankAccountSerializer</span><span class="p">(</span><span class="n">BankAccountSerializer</span><span class="p">):</span>
+    <span class="n">amount_set</span> <span class="o">=</span> <span class="n">AmountSerializer</span><span class="p">(</span><span class="n">many</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">required</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+
+<div class="viewcode-block" id="DetailBankAccountSerializer.Meta"><a class="viewcode-back" href="../../modules/serializers.html#transfer.serializers.DetailBankAccountSerializer.Meta">[документация]</a>    <span class="k">class</span> <span class="nc">Meta</span><span class="p">(</span><span class="n">BankAccountSerializer</span><span class="o">.</span><span class="n">Meta</span><span class="p">):</span>
+
+        <span class="n">fields</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;name&#39;</span><span class="p">,</span> <span class="s1">&#39;amount_set&#39;</span><span class="p">]</span></div></div>
+
+
+
+
+
+<span class="c1">#необходимо проверять что остаток по счету положителен</span>
+<span class="c1">#необходимо проверять что счет account_to  принадлежит иному пользователю</span>
+<span class="c1">#необходимо проверять что все счета из списка account_from принадлежат залогиненному пользователю</span>
+<span class="c1"># проверить что невозможно создать object_bankaccount_to не обновив object_bankaccount_from</span>
+</pre></div>
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../index.html">accounts</a></h1>
+
+
+
+
+
+
+
+
+<h3>Навигация</h3>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../index.html">Documentation overview</a><ul>
+  <li><a href="../index.html">Код модуля</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Быстрый поиск</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Искать" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2022, EN.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 4.3.1</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

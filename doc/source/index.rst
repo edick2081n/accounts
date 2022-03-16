@@ -9,9 +9,11 @@ Welcome to accounts's documentation!
 .. toctree::
    :maxdepth: 2
    :caption: Contents:
+
    modules/models
-   modules/serializer
+   modules/serializers
    modules/views
+
 
 
 Indices and tables

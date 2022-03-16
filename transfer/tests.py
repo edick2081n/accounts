@@ -86,7 +86,7 @@ def fill_db():
 
 
 # Using the standard RequestFactory API to create a form POST request
-class UtilzerApiTestCase(APITestCase):
+class BankAccountsApiTestCase(APITestCase):
     def setUp(self):
         self.utilzers, self.bankaccounts = fill_db()
         token = Token.objects.create(user=self.utilzers[0])
@@ -94,16 +94,28 @@ class UtilzerApiTestCase(APITestCase):
         self.client.credentials(HTTP_AUTHORIZATION='Token ' + token.key)
 #
     def test_get_bankaccount(self):
-#        factory = APIRequestFactory()
-#        request = factory.get('api/bankaccounts/')
-#        view = BankAccountViewSet.as_view({})
+        response = self.client.get('/api/bankaccounts/', format='json')
+        data=json.loads(json.dumps(response.data))
+        for account in self.bankaccounts:
+            self.assertIn({'account_of_utilzer': account.account_of_utilzer.name, 'name':account.name}, data)
 
- #       force_authenticate(request, user=self.user)
+### написать тесты на создание счета , обновление счета, на получение информации об одном счете
+class AmountApiTestCase(APITestCase):
 
+    def setUp(self):
+        self.utilzers, self.bankaccounts = fill_db()
+        token = Token.objects.create(user=self.utilzers[0])
+        self.client = APIClient()
+        self.client.credentials(HTTP_AUTHORIZATION='Token ' + token.key)
 
+    #
 
+    def test_create_amount(self):
+        response = self.client.post('/api/amount/', format='json')
 
-
-         response = self.client.get('/api/bankaccounts/', format='json')
-         json_data = json.dumps(response)
-         data = json.loads(response.content)
+    # def test_get_amount(self):
+    #     response = self.client.get('/api/amount/', format='json')
+    #     data = json.loads(json.dumps(response.data))
+    #     for account in self.bankaccounts:
+    #         self.assertIn({'account_of_utilzer': account.account_of_utilzer.name, 'name': account.name}, data)
+    #

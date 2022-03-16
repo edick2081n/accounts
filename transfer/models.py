@@ -75,6 +75,7 @@ class Transaction(models.Model):
     """общая сумма переводимых средств"""
     datetime = models.DateTimeField(auto_now_add=True)
     """дата и время создания обьекта транзакции"""
+    is_canceled= models.BooleanField(default=False)
 
     class Meta:
         unique_together = ('name_from', 'name_to', 'total_quantum', 'datetime')
