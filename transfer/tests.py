@@ -3,7 +3,7 @@ from rest_framework.test import APITestCase, force_authenticate
 from rest_framework.authtoken.models import Token
 from rest_framework.test import APIClient
 from django.contrib.auth.models import User
-from .views import BankAccountViewSet
+from .views import BankAccountViewSet, TransactionViewSet
 from .models import Utilzer, BankAccount, Amount, Transaction
 import datetime
 import json
@@ -97,25 +97,25 @@ class BankAccountsApiTestCase(APITestCase):
         response = self.client.get('/api/bankaccounts/', format='json')
         data=json.loads(json.dumps(response.data))
         for account in self.bankaccounts:
-            self.assertIn({'account_of_utilzer': account.account_of_utilzer.name, 'name':account.name}, data)
+            if account.account_of_utilzer.name!=self.utilzers[0].name:
+                self.assertIn({'account_of_utilzer': account.account_of_utilzer.name, 'name':account.name}, data)
 
 ### написать тесты на создание счета , обновление счета, на получение информации об одном счете
 class AmountApiTestCase(APITestCase):
 
     def setUp(self):
         self.utilzers, self.bankaccounts = fill_db()
-        token = Token.objects.create(user=self.utilzers[0])
-        self.client = APIClient()
-        self.client.credentials(HTTP_AUTHORIZATION='Token ' + token.key)
+        # token = Token.objects.create(user=self.utilzers[0])
+        # self.client = APIClient()
+        # self.client.credentials(HTTP_AUTHORIZATION='Token ' + token.key)
 
-    #
 
-    def test_create_amount(self):
-        response = self.client.post('/api/amount/', format='json')
+    def test_create_transaction(self):
+        factory = APIRequestFactory()
+        request = factory.post('/transaction/transmiting/', {'account_from': ['account1', 'account2'], 'account_to': 'account5', 'amount_for_transmitting': 30})
+        view = TransactionViewSet.as_view({'post': 'transmiting'})
 
-    # def test_get_amount(self):
-    #     response = self.client.get('/api/amount/', format='json')
-    #     data = json.loads(json.dumps(response.data))
-    #     for account in self.bankaccounts:
-    #         self.assertIn({'account_of_utilzer': account.account_of_utilzer.name, 'name': account.name}, data)
-    #
+        force_authenticate(request, user=self.utilzers[0])
+        response = view(request)
+      # print(response.data)
+        self.assertEqual(response.data['name_from'], self.utilzers[0].name)

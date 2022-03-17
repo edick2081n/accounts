@@ -161,8 +161,3 @@ class DetailBankAccountSerializer(BankAccountSerializer):
         fields = ['name', 'balance', 'list_amount_from']
 
 
-
-class DeleteTransactionSerializer(TransactionSerializer):
-    """сериализатор данных о произведенной отмене ранее совершенной транзакции
-    """
-    pass
