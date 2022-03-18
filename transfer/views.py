@@ -1,12 +1,10 @@
-
 from rest_framework import viewsets
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from .models import Utilzer, BankAccount, Amount, Transaction
-from .serializers import UtilzerSerializer, BankAccountSerializer, AmountSerializer, DetailUtilzerSerializer, \
+from .serializers import AmountSerializer, DetailUtilzerSerializer, \
     TokenSerializer, LoginSerializer, TransmittingSerializer, TransactionSerializer, DetailBankAccountSerializer
-
-from rest_framework.permissions import IsAuthenticated, AllowAny
+from rest_framework.permissions import AllowAny
 from rest_framework.authtoken.models import Token
 from django_filters.rest_framework import DjangoFilterBackend
 
@@ -21,16 +19,13 @@ class LoginUtilzerViewSet(viewsets.GenericViewSet):
 
     @action(methods=['POST'], detail=False)
     def login(self, request):
-     #   """"обработчик запросов авторизации"""
-
-       input_serializer = LoginSerializer(data=request.data)
-       input_serializer.is_valid(raise_exception=True)
-
-       user = input_serializer.instance
-       token, _ = Token.objects.get_or_create(user=user)   # применен метод  get_or_create который возвращает кортеж нас интересует только перрый член кортежа поэтому добалвляем подчеркивание в качестве второго члена кортежа
-
-       return Response({'token': token.key})
-
+        """обработчик запросов авторизации
+        """
+        input_serializer = LoginSerializer(data=request.data)
+        input_serializer.is_valid(raise_exception=True)
+        user = input_serializer.instance
+        token, _ = Token.objects.get_or_create(user=user)   # применен метод  get_or_create который возвращает кортеж нас интересует только перрый член кортежа поэтому добалвляем подчеркивание в качестве второго члена кортежа
+        return Response({'token': token.key})
 
 
 class UtilzerViewSet(viewsets.ReadOnlyModelViewSet):
@@ -39,22 +34,9 @@ class UtilzerViewSet(viewsets.ReadOnlyModelViewSet):
     """
     serializer_class = DetailUtilzerSerializer
     pagination_class = None
-    def get_queryset(self):
 
+    def get_queryset(self):
         return Utilzer.objects.exclude(is_superuser=True)
-
-
-class BankAccountViewSet(viewsets.ReadOnlyModelViewSet):
-    """
-    вьюсет предоставляет информацию обо всех счетах всех пользователей
-    """
-   # queryset = BankAccount.objects.all()
-    pagination_class = None
-    serializer_class = BankAccountSerializer
-
-    def get_queryset(self):
-        return BankAccount.objects.exclude(account_of_utilzer=self.request.user)
-        #return BankAccount.objects.all()
 
 
 class TransactionViewSet(viewsets.ReadOnlyModelViewSet):
@@ -66,6 +48,7 @@ class TransactionViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Transaction.objects.all()
     serializer_class = TransactionSerializer
     pagination_class = None
+
     @action(methods=['POST'], detail=False)
     def transmiting(self, request):
         serializer = TransmittingSerializer(data=request.data)
@@ -74,17 +57,6 @@ class TransactionViewSet(viewsets.ReadOnlyModelViewSet):
             data = TransactionSerializer(transaction).data
             return Response(data)
         return Response(serializer.errors)
-
-
-class ListTransactionViewSet(viewsets.ReadOnlyModelViewSet):
-    """
-    вьюсет предоставляет информацию о списке совершенных транзакций
-     с возможностью сортировки по имени получателя  средств, общей сумме транзакции
-    """
-    queryset = Transaction.objects.all()
-    serializer_class = TransactionSerializer
-    filter_backends = [DjangoFilterBackend]
-    filterset_fields = ['total_quantum', 'name_to__name']
 
 
 class ListAmountViewSet(viewsets.ReadOnlyModelViewSet):
@@ -111,14 +83,17 @@ class DetailBankAccountViewSet(viewsets.ReadOnlyModelViewSet):
 
 
 class DeleteTransactionViewSet(viewsets.ReadOnlyModelViewSet):
+    """
+        вьюсет предоставляет информацию о новой транзакции созданной
+        в результатет отмены ранее совершенной транзакции
+    """
     queryset = Transaction.objects.all()
- #   serializer_class = DeleteTransactionSerializer
     pagination_class = None
+
     @action(methods=['POST'], detail=False)
     def returning(self, request):
         transaction_number = request.POST["transaction_number"]
         transaction_number = int(transaction_number)
-       # transaction_number = self.request.user.pk
         object_transaction_for_deleting = Transaction.objects.get(id=transaction_number)
         if object_transaction_for_deleting.is_canceled==True:
             return Response('возврат по данной транзакции невозможен')
@@ -130,13 +105,13 @@ class DeleteTransactionViewSet(viewsets.ReadOnlyModelViewSet):
         # эти средства были первоначально отправлены
 
         objects_bankaccount_for_return_money = BankAccount.objects.filter(account_of_utilzer=object_transaction.name_to)
-       # objects_bankaccount_from_return_money = BankAccount.objects.get(account_of_utilzer=object_transaction.name_from)
         amounts_from_transaction = Amount.objects.filter(transaction=object_transaction_for_deleting)
+
         # так как любой amount в рамках данной транзакции ссылается на одну ту же транзакцию то можно взять любой amount
         # и взять из него номер счета на который переводились деньги
+
         object_bankaccount_from_return_money =amounts_from_transaction[0].amount_to_account
         object_bankaccount_to_return_money =amounts_from_transaction[0].amount_from_account
-
         quantity_accounts = len(objects_bankaccount_for_return_money)
         amount_for_returning = object_transaction.total_quantum / quantity_accounts
         if object_bankaccount_from_return_money.balance<object_transaction.total_quantum:
@@ -146,12 +121,10 @@ class DeleteTransactionViewSet(viewsets.ReadOnlyModelViewSet):
                 object_bankaccount_new_balance = object_bankaccount.balance - amount_for_returning
                 object_bankaccount.balance=object_bankaccount_new_balance
                 object_bankaccount.save()
-
                 object_amount = Amount.objects.create(amount_from_account=object_bankaccount_from_return_money,
                                                       amount_to_account=object_bankaccount,
                                                       quantum=amount_for_returning,
                                                       transaction=object_transaction_for_deleting)
-
             objects_bankaccount_from_return_money_balance = object_bankaccount_from_return_money.balance - object_transaction.total_quantum
             object_bankaccount_to_return_money.balance = objects_bankaccount_from_return_money_balance
             object_bankaccount_to_return_money.save()

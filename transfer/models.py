@@ -76,6 +76,7 @@ class Transaction(models.Model):
     datetime = models.DateTimeField(auto_now_add=True)
     """дата и время создания обьекта транзакции"""
     is_canceled= models.BooleanField(default=False)
+    """параметр отвечающий за использование транзакции при ее отмене"""
 
     class Meta:
         unique_together = ('name_from', 'name_to', 'total_quantum', 'datetime')

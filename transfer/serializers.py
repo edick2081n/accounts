@@ -1,11 +1,8 @@
 from rest_framework import serializers
 from rest_framework.authtoken.models import Token
 from django.contrib.auth.hashers import make_password
-from rest_framework.fields import DateField
-
 from .models import Utilzer, BankAccount, Amount, Transaction
-from rest_framework.response import Response
-from django.db.models.fields import DateField
+
 
 class TokenSerializer(serializers.ModelSerializer):
     """сериализатор токена авторизации польззователя"""
@@ -13,18 +10,18 @@ class TokenSerializer(serializers.ModelSerializer):
         model = Token
         fields = ['key']
 
+
 class LoginSerializer(serializers.Serializer):
     """сериализатор авторизационнх данных пользователя"""
     username = serializers.CharField(min_length=1, max_length =200)
     password = serializers.CharField(min_length=1, max_length=150)
 
-    def validate(self, raw_data):    # нужно реализовать сравнение паролей
-
+    def validate(self, raw_data):
         user_username = raw_data.get('username')
         user_password = raw_data.get('password')
         if not user_username or not user_password:
             raise serializers.ValidationError(' both fields are requaired')
-        self.check_registration(raw_data)    #  мы вызываем метод объекта сериализатора (который мы описываем ниже)
+        self.check_registration(raw_data)
         return raw_data
 
     def check_registration(self, validated_data):
@@ -37,16 +34,14 @@ class LoginSerializer(serializers.Serializer):
 
         if user_instance.password == user_password:
             raise serializers.ValidationError('password in incorrect')
-        self.instance = user_instance  # полю обьекта сериализатора (LoginSerializer) который мы в дальнейшем
-                                       # использу
+        self.instance = user_instance
+
 
 class UtilzerSerializer(serializers.ModelSerializer):
     """сериализатор данных пользователя"""
     class Meta:
         model = Utilzer
         fields = ['username', 'password']
-
-
 
 
 class BankAccountSerializer(serializers.ModelSerializer):
@@ -59,19 +54,13 @@ class BankAccountSerializer(serializers.ModelSerializer):
 
 
 class DetailUtilzerSerializer(UtilzerSerializer):
-    """
-
+    """сериализатор данных о счетах принадлежащих пользователю
     """
    # bankaccount_set = BankAccountSerializer(many=True, required=False)
     bankaccount_set = serializers.SlugRelatedField(many=True, read_only=True, slug_field='name')
 
     class Meta(UtilzerSerializer.Meta):
-
         fields = ['username', 'bankaccount_set']
-
-
-
-
 
 
 class AmountSerializer(serializers.ModelSerializer):
@@ -80,10 +69,10 @@ class AmountSerializer(serializers.ModelSerializer):
     """
     amount_from_account_name = serializers.StringRelatedField(source='amount_from_account')
 
-
     class Meta:
         model = Amount
         fields = "__all__"
+
 
 class TransmittingSerializer(serializers.Serializer):
     """сериализатор данных о произведенной транзакции со счетов даннго пользователя
@@ -111,19 +100,13 @@ class TransmittingSerializer(serializers.Serializer):
         utilzer_to =object_bankaccount_to.account_of_utilzer
         amount_for_transmitting_from_account = amount_for_transmitting / len(account_from)
 
-
         object_transaction = Transaction.objects.create(total_quantum=amount_for_transmitting,
                                                          name_from=utilzer_from,
                                                          name_to=utilzer_to)
-
-
         for account in account_from:
             object_bankaccount_from = BankAccount.objects.get(name=account)
             object_bankaccount_from_balance = object_bankaccount_from.balance
-
-
             new_balance_for_account_from = object_bankaccount_from_balance - amount_for_transmitting_from_account
-
 
             object_amount = Amount.objects.create(amount_from_account=object_bankaccount_from,
                                                   amount_to_account=object_bankaccount_to,
@@ -131,8 +114,6 @@ class TransmittingSerializer(serializers.Serializer):
                                                   transaction=object_transaction)
             object_bankaccount_from.balance = new_balance_for_account_from
             object_bankaccount_from.save()
-
-
 
         object_bankaccount_to.balance+=amount_for_transmitting
         object_bankaccount_to.save()
@@ -149,15 +130,12 @@ class TransactionSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 
-
 class DetailBankAccountSerializer(BankAccountSerializer):
-    """сериализатор данных о произведенных
+    """сериализатор данных описывающию операции по данному счету
     """
     list_amount_from = AmountSerializer(many=True, required=False)
 
     class Meta(BankAccountSerializer.Meta):
-
-        #fields = {'name':['exact'], 'list_amount_from':['exact', 'contains']}
         fields = ['name', 'balance', 'list_amount_from']
 
 
